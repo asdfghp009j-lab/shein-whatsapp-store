@@ -1,39 +1,26 @@
-from __future__ import annotations
+import os
+from dotenv import load_dotenv
 
-from functools import wraps
-from flask import abort, redirect, request, session, url_for
+load_dotenv()
 
-from database import get_db
-
-
-def current_user():
-    user_id = session.get("user_id")
-    if not user_id:
-        return None
-    db = get_db()
-    return db.execute(
-        "SELECT * FROM users WHERE id = ? AND active = 1",
-        (user_id,),
-    ).fetchone()
-
-
-def login_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if not current_user():
-            return redirect(url_for("login", next=request.path))
-        return view(*args, **kwargs)
-    return wrapped
-
-
-def role_required(*allowed_roles):
-    def decorator(view):
-        @wraps(view)
-        @login_required
-        def wrapped(*args, **kwargs):
-            user = current_user()
-            if user is None or user["role"] not in allowed_roles:
-                abort(403)
-            return view(*args, **kwargs)
-        return wrapped
-    return decorator
+APP_MODE = os.getenv("APP_MODE", "DEMO").upper()
+SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
+DATABASE_PATH = os.getenv("DATABASE_PATH", "store.db")
+HOST = os.getenv("HOST", "127.0.0.1")
+PORT = int(os.getenv("PORT", "5000"))
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
+WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")
+WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "")
+META_APP_SECRET = os.getenv("META_APP_SECRET", "")
+SUPPORTED_COUNTRIES = [
+    "اليمن",
+    "السودان",
+    "ليبيا",
+    "لبنان",
+    "موريتانيا",
+    "العراق",
+    "سوريا",
+    "جيبوتي",
+    "الصومال",
+]

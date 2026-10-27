@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}تسجيل الدخول{% endblock %}
+{% block content %}
+<div class="login-box">
+  <h2>تسجيل الدخول</h2>
+  <form method="post">
+    <div class="form-row">
+      <label>اسم المستخدم</label>
+      <input type="text" name="username" required>
+    </div>
+    <div class="form-row">
+      <label>كلمة المرور</label>
+      <input type="password" name="password" required>
+    </div>
+    <button type="submit">دخول</button>
+  </form>
+  <div class="card" style="margin-top: 20px;">
+    <strong>حسابات تجريبية:</strong>
+    <ul>
+      <li>admin / DemoAdmin!2026</li>
+      <li>supervisor / DemoSupervisor!2026</li>
+      <li>customer / DemoCustomer!2026</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

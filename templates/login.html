@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}متجر SHEIN{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <nav class="topbar">
+      <div class="container inner">
+        <div class="brand">SHEIN Store</div>
+        <div class="nav-links">
+          {% if current_user %}
+            <span>{{ current_user.display_name }}</span>
+            <span class="badge">{{ current_user.role }}</span>
+            <a href="{{ url_for('dashboard') }}">لوحة التحكم</a>
+            {% if current_user.role == 'admin' %}
+              <a href="{{ url_for('admin_dashboard') }}">الإدارة</a>
+            {% endif %}
+            <form method="post" action="{{ url_for('logout') }}" style="display:inline;">
+              <button class="secondary" type="submit">تسجيل الخروج</button>
+            </form>
+          {% else %}
+            <a href="{{ url_for('login') }}">تسجيل الدخول</a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

@@ -1,74 +1,36 @@
-# متجر SHEIN عبر WhatsApp — Starter MVP
+# SHEIN WhatsApp Store
 
-مشروع Flask عربي باتجاه RTL لإدارة الطلبات والمدفوعات والمشرفين والرواتب والتقييمات في وضع تجريبي آمن.
+This project is a working prototype for a SHEIN WhatsApp ordering system with admin dashboard, supervisor role, customer flow, demo-mode data, and a SQLite database.
 
-## ما الذي يعمل في هذه النسخة؟
-- تسجيل دخول بثلاثة أدوار: عميل، مشرف، مدير.
-- قاعدة بيانات SQLite مع إنشاء بيانات تجريبية تلقائيًا في وضع DEMO.
-- لوحة متجاوبة وقائمة طلبات وتفاصيل كل طلب.
-- إنشاء طلب يدويًا من رابط SHEIN وسعر يدخله المستخدم. لا يوجد استخراج تلقائي لبيانات SHEIN.
-- رفع إيصال **تجريبي فقط** ووضعه بانتظار المراجعة.
-- مراجعة إيصال تجريبي، واستلام نقدي تجريبي، وتسجيل اسم المشرف والحدث.
-- تحديث حالات الشحن بعد تأكيد الدفع.
-- إنشاء مشرف برقم SUP فريد.
-- تقييم الطلب بعد التسليم.
-- إعدادات راتب وصرف وحد التقييمات السلبية.
-- فصل DEMO عن LIVE؛ خصومات الرواتب التلقائية تعمل في الخدمة فقط على تقييمات مؤهلة في LIVE، ولا تخصم أي شيء في DEMO.
-- سجل تدقيق للأحداث.
-- مسار تحقق GET أولي لـ WhatsApp webhook؛ استقبال POST غير مفعّل قبل تنفيذ تحقق التوقيع واختباره.
+## Features
 
-## المتطلبات
-- Python 3.12+
-- pip
+- Flask app with role-based access control
+- SQLite database for local development and testing
+- Demo users and demo orders
+- Customer order creation and tracking
+- Payment review flow
+- Supervisor and admin dashboards
+- Order status updates and notifications
+- Basic WhatsApp webhook verification scaffold
 
-## التشغيل محليًا
-```bash
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-python app.py
-```
-افتح `http://127.0.0.1:5000`.
+## Quick start
 
-## حسابات DEMO
-- المدير: `admin` / `DemoAdmin!2026`
-- المشرف: `supervisor` / `DemoSupervisor!2026`
-- العميل: `customer` / `DemoCustomer!2026`
+1. Create a virtual environment.
+2. Install dependencies:
+   pip install -r requirements.txt
+3. Copy .env.example to .env and adjust values.
+4. Run the app:
+   python app.py
+5. Open http://127.0.0.1:5000/login
 
-هذه الحسابات للتطوير المحلي فقط. لا تنشرها أو تستخدمها في الإنتاج. غيّر كلمات المرور وأعد إعداد `SECRET_KEY` قبل أي نشر.
+## Demo accounts
 
-## اختبارات
-```bash
-pytest
-```
+- admin / DemoAdmin!2026
+- supervisor / DemoSupervisor!2026
+- customer / DemoCustomer!2026
 
-## حدود مهمة قبل الاستخدام الحقيقي
-1. هذه نسخة أولية قابلة للتشغيل وليست جاهزة للإنتاج أو لاستقبال أموال.
-2. لا توجد حتى الآن رسائل WhatsApp فعلية، ولا إرسال قروب، ولا رفع ملفات إيصالات حقيقية. تحتاج هذه الميزات إلى تكاملات وتحقق أمني.
-3. مسار webhook لا يقبل POST في هذه النسخة؛ يجب تنفيذ التحقق من `X-Hub-Signature-256` باستخدام `META_APP_SECRET` قبل معالجة أي حدث.
-4. لا يوجد تكامل شراء مع SHEIN. إدخال الرابط لا يستخرج السعر أو الصور أو المقاسات؛ أدخل البيانات يدويًا إذا لم يوجد مصدر رسمي مصرح به.
-5. الدفع النقدي في DEMO يسجل محاكاة فقط. في LIVE لا تفعّل الخدمة إلا بعد وضع عملية تحقق حقيقية ومراجعة محاسبية.
-6. إعداد `APP_MODE=LIVE` لا يكفي وحده لتشغيل WhatsApp أو الدفع. يلزم HTTPS وإعداد Meta Cloud API وقوالب الرسائل المناسبة واختبارات نشر.
-7. قواعد خصم الرواتب تحتاج مراجعة القوانين المحلية وعقود العمل. لا تستخدمها لإجراء خصومات حقيقية قبل اعتماد السياسة قانونيًا.
-8. قبل الإنتاج أضف حماية CSRF، ومحددات محاولات الدخول، وسياسة نسخ احتياطي، وتخزينًا خاصًا للمرفقات، وإدارة جلسات آمنة، وترحيلات قاعدة البيانات، ومراجعة أمنية.
+## Production notes
 
-## بنية الملفات
-- `app.py`: مسارات Flask والصلاحيات.
-- `db.py`: مخطط SQLite وبيانات DEMO.
-- `services.py`: منطق الطلبات والمدفوعات والتقييمات والرواتب.
-- `templates/`: صفحات عربية.
-- `static/app.css`: التصميم المتجاوب.
-- `tests/`: اختبارات أساسية.
-
-## الخطوات التالية
-- إضافة CSRF وعمليات reset آمنة.
-- فصل الخدمات إلى وحدات أصغر مع ترحيلات قاعدة البيانات.
-- تنفيذ Meta webhook signature verification واختباره.
-- تنفيذ WhatsApp Cloud API outbound messages باستخدام قوالب معتمدة.
-- تخزين الإيصالات الحقيقية في مخزن خاص مع صلاحيات وصول.
-- إضافة مزود دفع أو مطابقة بنكية موثوقة.
-- اختبار قواعد الرواتب على بيانات مصطنعة قبل أي استخدام حقيقي.
+- Replace demo credentials before deployment.
+- Use HTTPS and proper secrets in production.
+- Use Meta WhatsApp Cloud API only after verification and proper token configuration.

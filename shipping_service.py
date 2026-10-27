@@ -10,49 +10,28 @@ def submit_rating(db, order_id: int, customer_id: int, form: dict, environment: 
     if not order:
         raise ValueError("الطلب غير موجود")
     if order["status"] != "delivered":
-        raise ValueError("يمكن التقييم فقط بعد التسليم")
+        raise ValueError("يجب أن يتم التسليم أولاً")
     if db.execute("SELECT id FROM ratings WHERE order_id = ?", (order_id,)).fetchone():
         raise ValueError("تم تقييم هذا الطلب مسبقًا")
 
-    vals = {}
+    values = {}
     for key in ("transaction_rating", "supervisor_rating", "speed_rating", "communication_rating", "overall_rating"):
         try:
-            value = int(form.get(key, 5))
+            val = int(form.get(key, 5))
         except ValueError:
-            raise ValueError("التقييم يجب أن يكون رقمًا من 1 إلى 5")
-        if value < 1 or value > 5:
+            raise ValueError("التقييم يجب أن يكون رقمًا بين 1 و5")
+        if val < 1 or val > 5:
             raise ValueError("التقييم يجب أن يكون بين 1 و5")
-        vals[key] = value
+        values[key] = val
 
     eligible = 1 if environment == "LIVE" and order["environment"] == "LIVE" and order["supervisor_id"] else 0
     db.execute(
-        """
-        INSERT INTO ratings(
-            order_id, customer_id, supervisor_id, transaction_rating, supervisor_rating,
-            speed_rating, communication_rating, overall_rating, comment, eligible, environment, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            order_id,
-            customer_id,
-            order["supervisor_id"],
-            vals["transaction_rating"],
-            vals["supervisor_rating"],
-            vals["speed_rating"],
-            vals["communication_rating"],
-            vals["overall_rating"],
-            form.get("comment", ""),
-            eligible,
-            environment,
-            datetime.now(timezone.utc).isoformat(),
-        ),
+        "INSERT INTO ratings(order_id, customer_id, supervisor_id, transaction_rating, supervisor_rating, speed_rating, communication_rating, overall_rating, comment, eligible, environment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (order_id, customer_id, order["supervisor_id"], values["transaction_rating"], values["supervisor_rating"], values["speed_rating"], values["communication_rating"], values["overall_rating"], form.get("comment", ""), eligible, environment, datetime.now(timezone.utc).isoformat()),
     )
-    log_event(db, customer_id, "submit_rating", "order", order_id, f"eligible={eligible}; supervisor_rating={vals['supervisor_rating']}")
+    log_event(db, customer_id, "submit_rating", "order", order_id, f"eligible={eligible}; supervisor_rating={values['supervisor_rating']}")
 
 
 def negative_ratings_count(db, supervisor_id: int, environment: str = "LIVE"):
-    row = db.execute(
-        "SELECT COUNT(*) AS count FROM ratings WHERE supervisor_id = ? AND environment = ? AND eligible = 1 AND supervisor_rating <= 2",
-        (supervisor_id, environment),
-    ).fetchone()
-    return row["count"] if row else 0
+    count = db.execute("SELECT COUNT(*) AS count FROM ratings WHERE supervisor_id = ? AND environment = ? AND eligible = 1 AND supervisor_rating <= 2", (supervisor_id, environment)).fetchone()["count"]
+    return count

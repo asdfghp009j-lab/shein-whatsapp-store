@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}لوحة المدير{% endblock %}
+{% block content %}
+<h2>لوحة المدير</h2>
+<div class="grid">
+  <div class="stat-box"><div>العملاء</div><h3>{{ stats.customers }}</h3></div>
+  <div class="stat-box"><div>المشرفين</div><h3>{{ stats.supervisors }}</h3></div>
+  <div class="stat-box"><div>الطلبات</div><h3>{{ stats.orders }}</h3></div>
+  <div class="stat-box"><div>بانتظار الدفع</div><h3>{{ stats.pending }}</h3></div>
+</div>
+
+<div class="card">
+  <h3>إعادة ضبط الوضع التجريبي</h3>
+  <form method="post" action="{{ url_for('reset_demo') }}">
+    <button type="submit" class="warning">إعادة ضبط البيانات التجريبية</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>آخر الطلبات</h3>
+  <table>
+    <tr>
+      <th>رقم الطلب</th>
+      <th>العميل</th>
+      <th>الحالة</th>
+      <th>الإجمالي</th>
+    </tr>
+    {% for order in recent_orders %}
+    <tr>
+      <td><a href="{{ url_for('order_detail', order_id=order.order_code) }}">{{ order.order_code }}</a></td>
+      <td>{{ order.customer_id }}</td>
+      <td>{{ order.status }}</td>
+      <td>{{ order.total_amount }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,20 +1,10 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
-import os
+from datetime import datetime, timezone
 
-from config import META_APP_SECRET
+from database import log_event
 
 
-def verify_meta_signature(raw_body: bytes, signature_header: str | None) -> bool:
-    if not META_APP_SECRET:
-        return False
-    if not signature_header:
-        return False
-    expected = "sha256=" + hmac.new(META_APP_SECRET.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, signature_header)
-
-
-def verify_webhook_event(payload: dict) -> bool:
-    return isinstance(payload, dict) and "entry" in payload
+def create_audit(db, actor_user_id, action, entity_type, entity_id, details):
+    db.execute("INSERT INTO audit_logs(actor_user_id, action, entity_type, entity_id, details, created_at) VALUES (?, ?, ?, ?, ?, ?)", (actor_user_id, action, entity_type, str(entity_id), details, datetime.now(timezone.utc).isoformat()))
+    return True
