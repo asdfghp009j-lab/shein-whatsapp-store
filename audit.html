@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block title %}سجل العمليات{% endblock %}
+{% block content %}
+<div class="pagehead"><div><p class="eyebrow">الأمان والمراجعة</p><h1>سجل العمليات</h1><p class="muted">آخر 200 حدث مسجل في قاعدة البيانات.</p></div></div>
+<section class="card"><div class="tablewrap"><table><thead><tr><th>التاريخ UTC</th><th>المستخدم</th><th>الإجراء</th><th>النوع</th><th>المعرف</th><th>التفاصيل</th></tr></thead><tbody>{% for l in logs %}<tr><td>{{ l['created_at'][:19].replace('T',' ') }}</td><td>{{ l['display_name'] or 'النظام' }}</td><td>{{ l['action'] }}</td><td>{{ l['entity_type'] }}</td><td>{{ l['entity_id'] }}</td><td>{{ l['details'] }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

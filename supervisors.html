@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block title %}المشرفون{% endblock %}
+{% block content %}
+<div class="pagehead"><div><p class="eyebrow">الإدارة</p><h1>المشرفون</h1><p class="muted">لكل مشرف رقم تعريف ثابت وسجل إجراءات.</p></div></div>
+<section class="card"><h2>إضافة مشرف</h2><form method="post" action="{{ url_for('add_supervisor') }}" class="formgrid"><div><label>الاسم الظاهر</label><input name="display_name" required></div><div><label>اسم المستخدم</label><input name="username" required></div><div><label>كلمة مرور (10 أحرف على الأقل)</label><input name="password" type="password" minlength="10" required></div><div class="formend"><button class="btn btn-primary">إنشاء حساب</button></div></form></section>
+<section class="card"><h2>قائمة المشرفين</h2><div class="tablewrap"><table><thead><tr><th>الرقم</th><th>الاسم</th><th>الطلبات</th><th>متوسط التقييم</th><th>تقييمات سلبية</th><th>الحساب</th></tr></thead><tbody>{% for s in supervisors %}<tr><td><b>{{ s['supervisor_code'] }}</b></td><td>{{ s['display_name'] }}</td><td>{{ s['order_count'] }}</td><td>{{ "%.2f"|format(s['avg_rating'] or 0) }} / 5</td><td>{{ s['negative_count'] }}</td><td>{{ 'نشط' if s['active'] else 'موقوف' }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

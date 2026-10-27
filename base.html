@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}متجر SHEIN{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="{{ url_for('dashboard') }}">🛍️ SHEIN Store</a>
+  <div class="topright">
+    <span class="badge {{ 'demo' if app_mode=='DEMO' else 'live' }}">{{ app_mode }}</span>
+    {% if current_user %}
+      <span class="userlabel">{{ current_user['display_name'] }}{% if current_user['supervisor_code'] %} · {{ current_user['supervisor_code'] }}{% endif %}</span>
+      <form method="post" action="{{ url_for('logout') }}"><button class="btn btn-outline" type="submit">خروج</button></form>
+    {% endif %}
+  </div>
+</header>
+<div class="shell">
+{% if current_user %}
+<nav class="nav">
+  <a href="{{ url_for('dashboard') }}">الرئيسية</a>
+  {% if current_user['role'] in ['customer','admin'] %}<a href="{{ url_for('new_order') }}">طلب جديد</a>{% endif %}
+  {% if current_user['role']=='admin' %}
+    <a href="{{ url_for('supervisors') }}">المشرفون</a>
+    <a href="{{ url_for('payroll') }}">الرواتب</a>
+    <a href="{{ url_for('audit') }}">سجل العمليات</a>
+  {% endif %}
+</nav>
+{% endif %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}<section class="flashes">{% for category,message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+{% endwith %}
+<main>{% block content %}{% endblock %}</main>
+<footer>نسخة أولية · وضع {{ app_mode }} · لا يتم تأكيد الأموال أو الاتصال بالخدمات الخارجية دون إعداد فعلي</footer>
+</div>
+</body>
+</html>

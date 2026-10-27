@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}الرواتب{% endblock %}
+{% block content %}
+<div class="pagehead"><div><p class="eyebrow">الإدارة المالية</p><h1>الرواتب والخصومات</h1><p class="muted">الخصومات الحقيقية تُنشأ من التقييمات المؤهلة في LIVE فقط. وضع DEMO لا يخصم من الرواتب.</p></div></div>
+<section class="card"><h2>إعدادات الرواتب</h2><form method="post" action="{{ url_for('save_payroll_settings') }}" class="formgrid">
+<div><label>الراتب الأساسي (SAR)</label><input type="number" step="0.01" name="salary_base_sar" value="{{ settings.get('salary_base_sar','1000') }}" required></div>
+<div><label>سعر الصرف (YER لكل SAR)</label><input type="number" step="0.01" name="exchange_yer_per_sar" value="{{ settings.get('exchange_yer_per_sar','140') }}" required></div>
+<div><label>عدد التقييمات السلبية</label><input type="number" name="negative_threshold" value="{{ settings.get('negative_threshold','5') }}" required></div>
+<div><label>الخصم لكل مجموعة (SAR)</label><input type="number" step="0.01" name="deduction_sar" value="{{ settings.get('deduction_sar','350') }}" required></div>
+<div class="formend"><button class="btn btn-primary">حفظ الإعدادات</button></div></form>
+<div class="notice">السعر التوضيحي الافتراضي: 1,000 SAR = 140,000 YER؛ و350 SAR = 49,000 YER عند سعر صرف 140. تأكد من ملاءمة سياسة الخصومات لقوانين العمل والعقود.</div></section>
+<section class="card"><h2>ملخص المشرفين</h2><div class="tablewrap"><table><thead><tr><th>المشرف</th><th>الرقم</th><th>التقييمات السلبية المؤهلة</th><th>خصومات مسجلة ومعتمدة (SAR)</th><th>الراتب الأساسي (SAR)</th><th>الأساسي التوضيحي (YER)</th></tr></thead><tbody>{% for s in rows %}<tr><td>{{ s['display_name'] }}</td><td>{{ s['supervisor_code'] }}</td><td>{{ s['bad_ratings'] }}</td><td>{{ "%.2f"|format(s['deductions']) }}</td><td>{{ settings.get('salary_base_sar','1000') }}</td><td>{{ "%.0f"|format((settings.get('salary_base_sar','1000')|float)*(settings.get('exchange_yer_per_sar','140')|float)) }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

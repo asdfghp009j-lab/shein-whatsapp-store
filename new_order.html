@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}طلب جديد{% endblock %}
+{% block content %}
+<div class="pagehead"><div><p class="eyebrow">العميل / الطلبات</p><h1>إنشاء طلب جديد</h1><p class="muted">أدخل البيانات المتوفرة. لا يتم استخراج بيانات SHEIN تلقائيًا في هذه النسخة.</p></div></div>
+<form class="card formcard" method="post">
+<label>رابط المنتج *</label><input name="product_url" placeholder="https://www.shein.com/..." required dir="ltr">
+<label>اسم المنتج</label><input name="product_name" placeholder="اسم المنتج إن كان معروفًا">
+<div class="formgrid"><div><label>السعر التقديري للوحدة (YER) *</label><input name="unit_price" type="number" min="1" required></div><div><label>الكمية</label><input name="quantity" type="number" min="1" max="100" value="1"></div></div>
+<label>المقاس واللون والخيارات</label><input name="options" placeholder="مثل: L، أسود">
+<label>الدولة</label><select name="country">{% for c in ['اليمن','السودان','ليبيا','لبنان','موريتانيا','العراق','سوريا','جيبوتي','الصومال'] %}<option>{{ c }}</option>{% endfor %}</select>
+<div class="notice">السعر الذي تدخله تقديري. لن يتم تأكيد السعر النهائي أو الشراء من SHEIN تلقائيًا دون تكامل مناسب ومراجعة.</div>
+<button class="btn btn-primary" type="submit">إنشاء الطلب</button> <a class="btn btn-outline" href="{{ url_for('dashboard') }}">إلغاء</a>
+</form>
+{% endblock %}

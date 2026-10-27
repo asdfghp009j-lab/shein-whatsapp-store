@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block title %}{{ order['order_code'] }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><p class="eyebrow">تفاصيل الطلب</p><h1>{{ order['order_code'] }}</h1><p class="muted">أنشئ في {{ order['created_at'][:19].replace('T',' ') }} UTC</p></div><a class="btn btn-outline" href="{{ url_for('dashboard') }}">رجوع</a></div>
+<div class="detailgrid">
+<section class="card">
+<h2>المنتج</h2><div class="productname">{{ order['product_name'] }}</div><p><a href="{{ order['product_url'] }}" target="_blank" rel="noopener">فتح رابط المنتج ↗</a></p>
+<div class="detailrows"><div><span>الكمية</span><b>{{ order['quantity'] }}</b></div><div><span>سعر الوحدة</span><b>{{ "{:,.0f}".format(order['unit_price']) }} {{ order['currency'] }}</b></div><div><span>الإجمالي</span><b>{{ "{:,.0f}".format(order['total_amount']) }} {{ order['currency'] }}</b></div><div><span>الدولة</span><b>{{ order['country'] }}</b></div><div><span>الخيارات</span><b>{{ order['options'] or '—' }}</b></div><div><span>بيئة الطلب</span><b>{{ order['environment'] }}</b></div><div><span>حالة الطلب</span><b>{{ order['status'] }}</b></div><div><span>حالة الدفع</span><b>{{ order['payment_status'] }}</b></div><div><span>المشرف</span><b>{{ order['supervisor_code'] or 'غير معيّن' }}</b></div></div>
+{% if current_user['role']=='customer' and app_mode=='DEMO' and order['payment_status']!='paid' %}
+<form method="post" action="{{ url_for('upload_demo_receipt',order_id=order['order_code']) }}" class="subform"><p class="notice">إيصال تجريبي فقط — لا يثبت وصول أي أموال.</p><button class="btn btn-outline" type="submit">إرسال إيصال تجريبي</button></form>
+{% endif %}
+{% if current_user['role']=='customer' and order['status']=='delivered' %}
+<form method="post" action="{{ url_for('rate_order',order_id=order['order_code']) }}" class="subform"><h3>تقييم الطلب</h3><div class="formgrid">{% for key,label in [('transaction_rating','المعاملة'),('supervisor_rating','المشرف'),('speed_rating','السرعة'),('communication_rating','التواصل'),('overall_rating','التقييم العام')] %}<div><label>{{ label }}</label><select name="{{ key }}">{% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} نجوم</option>{% endfor %}</select></div>{% endfor %}</div><label>تعليق اختياري</label><textarea name="comment"></textarea><button class="btn btn-primary" type="submit">إرسال التقييم</button></form>
+{% endif %}
+</section>
+{% if current_user['role'] in ['admin','supervisor'] %}
+<section class="card">
+<h2>إجراءات المشرف</h2>
+{% if current_user['role']=='admin' and supervisors %}
+<form method="post" action="{{ url_for('order_action',order_id=order['order_code']) }}" class="subform"><input type="hidden" name="action" value="assign"><label>تعيين مشرف</label><select name="supervisor_id">{% for s in supervisors %}<option value="{{ s['id'] }}" {% if s['id']==order['supervisor_id'] %}selected{% endif %}>{{ s['supervisor_code'] }} — {{ s['display_name'] }}</option>{% endfor %}</select><button class="btn btn-outline" type="submit">حفظ التعيين</button></form>
+{% endif %}
+<form method="post" action="{{ url_for('order_action',order_id=order['order_code']) }}" class="subform"><input type="hidden" name="action" value="approve"><label>ملاحظات الموافقة</label><input name="note" placeholder="اختياري"><button class="btn btn-primary" type="submit">الموافقة على الطلب</button><p class="muted">الموافقة لا تؤكد الدفع.</p></form>
+<form method="post" action="{{ url_for('order_action',order_id=order['order_code']) }}" class="subform"><input type="hidden" name="action" value="cash"><h3>استلام نقدي باليد</h3><label>المبلغ المستلم</label><input name="amount" type="number" min="1" step="0.01" required><label>العملة</label><select name="currency"><option value="YER">ريال يمني (YER)</option></select><label>ملاحظة / مرجع</label><input name="note" placeholder="تم الاستلام فعليًا"><button class="btn btn-primary" type="submit">تأكيد استلام النقد</button><p class="muted">في وضع DEMO يسجل دفعًا محاكى فقط.</p></form>
+<form method="post" action="{{ url_for('order_action',order_id=order['order_code']) }}" class="subform"><input type="hidden" name="action" value="ship"><label>تحديث حالة الشحن</label><select name="status"><option value="packing">قيد التجهيز</option><option value="shipped">تم الشحن</option><option value="out_for_delivery">خرج للتسليم</option><option value="delivered">تم التسليم</option><option value="cancelled">ملغي</option></select><button class="btn btn-outline" type="submit">تحديث الحالة</button></form>
+</section>
+{% endif %}
+</div>
+<section class="card"><h2>سجل المدفوعات</h2>{% if payments %}<div class="tablewrap"><table><thead><tr><th>المرجع</th><th>الطريقة</th><th>المبلغ</th><th>الحالة</th><th>تجريبي؟</th><th>إجراء</th></tr></thead><tbody>{% for p in payments %}<tr><td>{{ p['payment_ref'] }}</td><td>{{ p['method'] }}</td><td>{{ "{:,.0f}".format(p['amount']) }} {{ p['currency'] }}</td><td>{{ p['status'] }}</td><td>{{ 'نعم' if p['is_demo'] else 'لا' }}</td><td>{% if p['status']=='pending_review' and current_user['role'] in ['admin','supervisor'] %}<form method="post" action="{{ url_for('order_action',order_id=order['order_code']) }}" class="inlineform"><input type="hidden" name="payment_id" value="{{ p['id'] }}"><button class="btn btn-sm btn-primary" name="action" value="review_paid">تأكيد بعد التحقق</button><button class="btn btn-sm btn-danger" name="action" value="review_reject">رفض</button></form>{% else %}—{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">لا توجد دفعات مسجلة.</p>{% endif %}</section>
+<section class="card"><h2>سجل العمليات</h2>{% for e in events %}<div class="timeline"><span class="dot"></span><div><b>{{ e['action'] }}</b><p>{{ e['details'] }}</p><small>{{ e['created_at'][:19].replace('T',' ') }} UTC</small></div></div>{% else %}<p class="muted">لا توجد أحداث بعد.</p>{% endfor %}</section>
+{% endblock %}

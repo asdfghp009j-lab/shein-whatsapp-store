@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block title %}لوحة التحكم{% endblock %}
+{% block content %}
+<div class="pagehead"><div><p class="eyebrow">لوحة التحكم</p><h1>أهلًا، {{ user['display_name'] }}</h1><p class="muted">إدارة الطلبات بحسب صلاحيات حسابك.</p></div>
+{% if user['role'] in ['customer','admin'] %}<a class="btn btn-primary" href="{{ url_for('new_order') }}">＋ طلب جديد</a>{% endif %}</div>
+<div class="stats">{% for label,value in stats %}<div class="stat card"><span>{{ label }}</span><strong>{{ value }}</strong></div>{% endfor %}</div>
+<section class="card">
+  <div class="sectionhead"><h2>{% if user['role']=='customer' %}طلباتي{% elif user['role']=='supervisor' %}الطلبات المتاحة{% else %}أحدث الطلبات{% endif %}</h2><span class="muted">{{ orders|length }} طلب</span></div>
+  {% if orders %}
+  <div class="tablewrap"><table><thead><tr><th>رقم الطلب</th><th>المنتج</th><th>الإجمالي</th><th>الدفع</th><th>الحالة</th><th></th></tr></thead><tbody>
+  {% for o in orders %}<tr><td><b>{{ o['order_code'] }}</b><small>{{ o['environment'] }}</small></td><td>{{ o['product_name'] }}<small>{{ o['country'] }} · كمية {{ o['quantity'] }}</small></td><td>{{ "{:,.0f}".format(o['total_amount']) }} {{ o['currency'] }}</td><td><span class="status">{{ o['payment_status'] }}</span></td><td><span class="status">{{ o['status'] }}</span></td><td><a class="btn btn-outline btn-sm" href="{{ url_for('order_detail',order_id=o['order_code']) }}">التفاصيل</a></td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty">لا توجد طلبات حاليًا.</div>{% endif %}
+</section>
+{% if user['role']=='admin' %}
+<div class="quicklinks"><a class="card" href="{{ url_for('supervisors') }}">🧑‍💼 <b>إدارة المشرفين</b><span>أرقام تعريف وصلاحيات</span></a><a class="card" href="{{ url_for('payroll') }}">💵 <b>الرواتب والتقييمات</b><span>حسابات وخصومات مسجلة</span></a><a class="card" href="{{ url_for('audit') }}">🧾 <b>سجل العمليات</b><span>من فعل ماذا ومتى</span></a></div>
+{% endif %}
+{% endblock %}

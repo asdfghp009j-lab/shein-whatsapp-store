@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}تسجيل الدخول{% endblock %}
+{% block content %}
+<div class="loginwrap">
+  <section class="card login">
+    <div class="logo">🛍️</div><h1>متجر SHEIN</h1><p class="muted">لوحة الطلبات والمدفوعات والمشرفين</p>
+    <form method="post">
+      <label>اسم المستخدم</label><input name="username" required autocomplete="username">
+      <label>كلمة المرور</label><input name="password" type="password" required autocomplete="current-password">
+      <button class="btn btn-primary full" type="submit">دخول</button>
+    </form>
+    {% if app_mode=='DEMO' %}
+    <div class="demo-creds"><b>حسابات التجربة</b><br>المدير: <code>admin</code> / <code>DemoAdmin!2026</code><br>المشرف: <code>supervisor</code> / <code>DemoSupervisor!2026</code><br>العميل: <code>customer</code> / <code>DemoCustomer!2026</code></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
