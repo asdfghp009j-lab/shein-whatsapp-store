@@ -1,38 +1,35 @@
-{% extends 'base.html' %}
-{% block title %}لوحة المدير{% endblock %}
-{% block content %}
-<h2>لوحة المدير</h2>
-<div class="grid">
-  <div class="stat-box"><div>العملاء</div><h3>{{ stats.customers }}</h3></div>
-  <div class="stat-box"><div>المشرفين</div><h3>{{ stats.supervisors }}</h3></div>
-  <div class="stat-box"><div>الطلبات</div><h3>{{ stats.orders }}</h3></div>
-  <div class="stat-box"><div>بانتظار الدفع</div><h3>{{ stats.pending }}</h3></div>
-</div>
+from functools import wraps
 
-<div class="card">
-  <h3>إعادة ضبط الوضع التجريبي</h3>
-  <form method="post" action="{{ url_for('reset_demo') }}">
-    <button type="submit" class="warning">إعادة ضبط البيانات التجريبية</button>
-  </form>
-</div>
+from flask import abort, redirect, request, session, url_for
 
-<div class="card">
-  <h3>آخر الطلبات</h3>
-  <table>
-    <tr>
-      <th>رقم الطلب</th>
-      <th>العميل</th>
-      <th>الحالة</th>
-      <th>الإجمالي</th>
-    </tr>
-    {% for order in recent_orders %}
-    <tr>
-      <td><a href="{{ url_for('order_detail', order_id=order.order_code) }}">{{ order.order_code }}</a></td>
-      <td>{{ order.customer_id }}</td>
-      <td>{{ order.status }}</td>
-      <td>{{ order.total_amount }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-</div>
-{% endblock %}
+from database import get_db
+
+
+def current_user():
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+    db = get_db()
+    return db.execute("SELECT * FROM users WHERE id = ? AND active = 1", (user_id,)).fetchone()
+
+
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not current_user():
+            return redirect(url_for("login", next=request.path))
+        return view(*args, **kwargs)
+    return wrapped
+
+
+def role_required(*allowed_roles):
+    def decorator(view):
+        @wraps(view)
+        @login_required
+        def wrapped(*args, **kwargs):
+            user = current_user()
+            if user is None or user["role"] not in allowed_roles:
+                abort(403)
+            return view(*args, **kwargs)
+        return wrapped
+    return decorator

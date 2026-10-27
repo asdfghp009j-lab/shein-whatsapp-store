@@ -1,97 +1,90 @@
 {% extends 'base.html' %}
-{% block title %}لوحة التحكم{% endblock %}
+{% block title %}تفاصيل الطلب{% endblock %}
 {% block content %}
-<h2>لوحة {{ current_user.display_name }}</h2>
-
-<div class="grid">
-  <div class="stat-box">
-    <div>إجمالي الطلبات</div>
-    <h3>{{ stats.orders }}</h3>
-  </div>
-  <div class="stat-box">
-    <div>قيد التنفيذ</div>
-    <h3>{{ stats.pending }}</h3>
-  </div>
-  {% if current_user.role == 'admin' %}
-  <div class="stat-box">
-    <div>المدفوعات</div>
-    <h3>{{ stats.paid }}</h3>
-  </div>
-  {% endif %}
+<div class="card">
+  <h2>تفاصيل الطلب: {{ order.order_code }}</h2>
+  <p><strong>اسم المنتج:</strong> {{ order.product_name }}</p>
+  <p><strong>الرابط:</strong> <a href="{{ order.product_url }}" target="_blank">{{ order.product_url }}</a></p>
+  <p><strong>الكمية:</strong> {{ order.quantity }}</p>
+  <p><strong>السعر:</strong> {{ order.total_amount }} {{ order.currency }}</p>
+  <p><strong>الحالة:</strong> {{ order.status }}</p>
+  <p><strong>حالة الدفع:</strong> {{ order.payment_status }}</p>
+  <p><strong>الدولة:</strong> {{ order.country }}</p>
 </div>
 
-{% if current_user.role == 'customer' %}
-  <div class="card">
-    <h3>إنشاء طلب جديد</h3>
-    <form method="post" action="{{ url_for('new_order') }}">
-      <div class="grid">
-        <div class="form-row">
-          <label>رابط المنتج</label>
-          <input type="url" name="product_url" required>
-        </div>
-        <div class="form-row">
-          <label>اسم المنتج</label>
-          <input type="text" name="product_name" required>
-        </div>
-        <div class="form-row">
-          <label>الكمية</label>
-          <input type="number" name="quantity" min="1" value="1">
-        </div>
-        <div class="form-row">
-          <label>السعر</label>
-          <input type="number" step="0.01" name="unit_price" required>
-        </div>
-        <div class="form-row">
-          <label>الدولة</label>
-          <select name="country">
-            <option value="اليمن">اليمن</option>
-            <option value="السودان">السودان</option>
-            <option value="ليبيا">ليبيا</option>
-            <option value="لبنان">لبنان</option>
-            <option value="موريتانيا">موريتانيا</option>
-            <option value="العراق">العراق</option>
-            <option value="سوريا">سوريا</option>
-            <option value="جيبوتي">جيبوتي</option>
-            <option value="الصومال">الصومال</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label>المقاس</label>
-          <input type="text" name="size" placeholder="L, M, XL">
-        </div>
-        <div class="form-row">
-          <label>اللون</label>
-          <input type="text" name="color" placeholder="أسود - أبيض">
-        </div>
-      </div>
-      <button type="submit">إرسال الطلب</button>
-    </form>
-  </div>
+{% if current_user.role in ['admin', 'supervisor'] %}
+<div class="card">
+  <h3>تحديث حالة الشحن</h3>
+  <form method="post" action="{{ url_for('update_order_status', order_id=order.order_code) }}">
+    <div class="form-row">
+      <label>الحالة</label>
+      <select name="status">
+        <option value="received">استلام</option>
+        <option value="awaiting_payment">بانتظار الدفع</option>
+        <option value="approved">موافق عليه</option>
+        <option value="payment_confirmed">تم تأكيد الدفع</option>
+        <option value="packing">تجهيز</option>
+        <option value="shipped">شحن</option>
+        <option value="out_for_delivery">خارج للتسليم</option>
+        <option value="delivered">تم التسليم</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>ملاحظات</label>
+      <textarea name="note"></textarea>
+    </div>
+    <button type="submit">تحديث الحالة</button>
+  </form>
+</div>
 {% endif %}
 
+{% if current_user.role == 'customer' %}
 <div class="card">
-  <h3>آخر الطلبات</h3>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>رقم الطلب</th>
-          <th>المنتج</th>
-          <th>الحالة</th>
-          <th>السعر</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for order in orders %}
-        <tr>
-          <td><a href="{{ url_for('order_detail', order_id=order.order_code) }}">{{ order.order_code }}</a></td>
-          <td>{{ order.product_name }}</td>
-          <td>{{ order.status }}</td>
-          <td>{{ order.total_amount }} {{ order.currency }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <h3>إضافة دفعة</h3>
+  <form method="post" action="{{ url_for('add_payment', order_id=order.order_code) }}">
+    <div class="form-row">
+      <label>المبلغ</label>
+      <input type="number" step="0.01" name="amount" required>
+    </div>
+    <div class="form-row">
+      <label>طريقة الدفع</label>
+      <select name="method">
+        <option value="cash">نقدي</option>
+        <option value="manual_receipt">إيصال يدوي</option>
+      </select>
+    </div>
+    <button type="submit">تسجيل الدفع</button>
+  </form>
 </div>
+
+<div class="card">
+  <h3>تقييم الطلب</h3>
+  <form method="post" action="{{ url_for('rate_order', order_id=order.order_code) }}">
+    <div class="form-row"><label>التقييم العام</label><input type="number" name="overall_rating" min="1" max="5" value="5"></div>
+    <div class="form-row"><label>مستوى التعامل</label><input type="number" name="transaction_rating" min="1" max="5" value="5"></div>
+    <div class="form-row"><label>مستوى المشرف</label><input type="number" name="supervisor_rating" min="1" max="5" value="5"></div>
+    <div class="form-row"><label>سرعة التنفيذ</label><input type="number" name="speed_rating" min="1" max="5" value="5"></div>
+    <div class="form-row"><label>التواصل</label><input type="number" name="communication_rating" min="1" max="5" value="5"></div>
+    <div class="form-row"><label>تعليق</label><textarea name="comment"></textarea></div>
+    <button type="submit">إرسال التقييم</button>
+  </form>
+</div>
+{% endif %}
+
+{% if payments %}
+<div class="card">
+  <h3>المدفوعات</h3>
+  <table>
+    <tr><th>المعرف</th><th>المبلغ</th><th>الحالة</th><th>الطريقة</th></tr>
+    {% for payment in payments %}
+    <tr>
+      <td>{{ payment.payment_ref }}</td>
+      <td>{{ payment.amount }} {{ payment.currency }}</td>
+      <td>{{ payment.status }}</td>
+      <td>{{ payment.method }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
 {% endblock %}
